@@ -17,15 +17,18 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> {
   @override
   void initState() {
     super.initState();
+    _getThings();
+  }
+
+  _getThings() async {
+    await _getCurrentLoation();
     _getPolylinePoints();
-    _getCurrentLoation();
   }
 
   late GoogleMapController mapController;
 
-  static  LatLng source = LatLng(6.45659702205736, 3.527847715407704);
-  static  LatLng destination =
-      LatLng(6.457235513826116, 3.524065745247388);
+  LatLng source = LatLng(6.45659702205736, 3.527847715407704);
+  LatLng destination = LatLng(6.457235513826116, 3.524065745247388);
   final LatLng center = const LatLng(6.457294, 3.527354);
 
   final List<LatLng> points = [];
@@ -40,10 +43,16 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> {
     Location location = Location();
     final currentLocal = await location.getLocation();
     locationData = currentLocal;
-    source = LatLng(locationData!.latitude!, locationData!.latitude!);
-    destination = LatLng(locationData!.latitude! + 0.02, locationData!.latitude!+0.003);
+    source = LatLng(currentLocal.latitude!, currentLocal.longitude!);
+    destination =
+        LatLng(currentLocal.latitude! -0.003, currentLocal.longitude!);
     logger('My Location ===========',
         message: '${locationData!.latitude!}, ${locationData!.longitude!}');
+
+    location.onLocationChanged.listen((event) {
+      locationData = event;
+      setState(() {});
+    });
     setState(() {});
   }
 
@@ -109,7 +118,7 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> {
                     Polyline(
                         polylineId: PolylineId('main_route'),
                         points: points,
-                        color: Colors.green,
+                        color: Colors.purple,
                         endCap: Cap.roundCap,
                         startCap: Cap.roundCap,
                         jointType: JointType.round,
@@ -127,15 +136,13 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> {
                     Marker(
                         markerId: MarkerId('source'),
                         position: source,
-                        draggable: true,
                         rotation: sourceRotVal),
                     Marker(
                         markerId: MarkerId('current_location'),
                         position: LatLng(
                             locationData!.latitude!, locationData!.longitude!),
-                        draggable: true,
                         rotation: sourceRotVal),
-                     Marker(
+                    Marker(
                         markerId: MarkerId('destination'),
                         position: destination),
                   },
